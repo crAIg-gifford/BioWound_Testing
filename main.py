@@ -26,7 +26,8 @@ def make_request(method, eligibility_type, payload):
     Generic function to handle GET and POST requests.
     """
     if eligibility_type == "Dental":
-        endpoint = "DentalEligibilitySummary"
+        # endpoint = "DentalEligibilitySummary"
+        endpoint = "DentalEligibilityBenefitSummary"
     elif eligibility_type == "Medical":
         endpoint = "EligibilitySummary"
     url = f"{API_BASE_URL}{endpoint}"
