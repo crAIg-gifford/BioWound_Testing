@@ -5,6 +5,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from datetime import datetime
 from requests.exceptions import RequestException
+from payers import medicare, anthem_bcbs, general_payer
 
 # Load environment variables
 load_dotenv()
@@ -41,9 +42,11 @@ def make_request(method, eligibility_type, payload):
                 headers=HEADERS,
                 data=json.dumps(payload)
             )
-
-        response.raise_for_status()
-        return response.json()
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {"error": response.json()}
+        
     except RequestException as error:
         return {"error": str(error)}
 
@@ -92,7 +95,7 @@ def process_patient_data(row):
     """
 
     payload = {
-        "payerCode": str(row['pVerify ID']),
+        "payerCode": str(row['Payer ID']),
         "payerName": str(row['Payer Name']),
         "provider": {
             "lastName": str(row['Provider']),
@@ -107,8 +110,10 @@ def process_patient_data(row):
         "isSubscriberPatient": (
             True if str(row['isSubPat']).upper() == "TRUE" else False
         ),
-        "doS_StartDate": f"{datetime.now().strftime('%m/%d/%Y')}",
-        "doS_EndDate": f"{datetime.now().strftime('%m/%d/%Y')}",
+        # "doS_StartDate": f"{datetime.now().strftime('%m/%d/%Y')}",
+        # "doS_EndDate": f"{datetime.now().strftime('%m/%d/%Y')}",        
+        "doS_StartDate": "03/02/2025",
+        "doS_EndDate": "03/02/2025",
         "PracticeTypeCode": "86" if row['Type'] == "Dental" else "3",
         "Location": "TA",
         "IncludeHtmlResponse": True
@@ -123,14 +128,20 @@ def process_patient_data(row):
         }
     return payload
 
+# def extract_payment_responsibility_info(response):
+#     """
+#     Extract payment responsibility information from the API response.
+#     """
+
 
 def main():
     df = pd.read_excel(
         os.path.join('data', 'input', 'test_patients.xlsx'),
-        dtype={"pVerify ID": str}
+        dtype={"Payer ID": str}
     )
 
     my_results = []
+    ivr_results = {}
     # Process and submit data
     for index, row in df.iterrows():
         print(
@@ -144,11 +155,9 @@ def main():
         response = post_data(row['Type'], payload)
         if response.get("error"):
             my_results.append("Error")
+            continue
         else:
             my_results.append("Success")
-        print("\nAPI Response:")
-        print(json.dumps(response, indent=4))
-        # Export response to JSON file with payer name and subscriber ID
         export_response(
             response, 
             index, 
@@ -156,7 +165,37 @@ def main():
             str(row['Payer Name']),
             str(row['Subscriber ID'])
         )
+        if str(row['Payer ID']).upper() == "00007":
+            payment_responsibility_info = (
+                    medicare.medicare_payment_responsibility(response))
+            print("\nPayment Responsibility Info:")
+            print(json.dumps(payment_responsibility_info, indent=4))
+        elif str(row['Payer ID']).upper() == "000931":
+            payment_responsibility_info = (
+                    anthem_bcbs.anthem_bcbs_payment_responsibility(response))
+            print("\nPayment Responsibility Info:")
+            print(json.dumps(payment_responsibility_info, indent=4))
+        else:
+            payment_responsibility_info = (
+                    general_payer.general_payer_payment_responsibility(response))
+            print("\nPayment Responsibility Info:")
+            print(json.dumps(payment_responsibility_info, indent=4))
+            print("Not Medicare")
+
+        # Create subscriber key
+        sub_key = f"{row['Subscriber First']} {row['Subscriber Last']}"
+
+        # Determine if the subscriber is already in the ivr_results dictionary
+        if not ivr_results.get(sub_key):
+            ivr_results[sub_key] = []
+
+        # Add the payment responsibility info to the subscriber's list
+        ivr_results[sub_key].append(payment_responsibility_info)
+
     print(f"Results: {my_results}")
+    # Export the ivr_results to a JSON file
+    with open(f'data/output/ivr_results_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json', 'w') as f:
+        json.dump(ivr_results, f, indent=4)
 
 
 if __name__ == "__main__":
