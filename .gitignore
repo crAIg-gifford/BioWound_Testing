@@ -34,5 +34,5 @@ coverage/
 .env.production.local
 
 # PII Files
-data/output/
-data/input/
+data/input/*
+!data/output/.gitkeep
