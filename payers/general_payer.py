@@ -1,5 +1,5 @@
-def general_payer_payment_responsibility(response):
-    print("general_payer 222")
+def pVerify_general_payer_payment_responsibility(response):
+    print("pVerify_general_payer 222")
     if response['APIResponseCode'] == "1":
         return "Error"
     responsibility_details = {}
@@ -60,9 +60,9 @@ def stedi_general_payer_payment_responsibility(response):
 
         # Find dict associated with Durable Medical Equipment Purchase
         dme_dict = next(
-                (item for item in response['benefitsInformation']
-                if "Durable Medical Equipment Purchase" in item['serviceTypes']),
-                None
+            (item for item in response['benefitsInformation']
+             if "Durable Medical Equipment Purchase" in item['serviceTypes']),
+            None
         )
 
         # Payer Name

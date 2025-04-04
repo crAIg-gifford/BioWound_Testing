@@ -10,10 +10,10 @@ from payers import medicare, anthem_bcbs, general_payer
 # Load environment variables
 load_dotenv()
 
-API_BASE_URL = os.getenv("API_BASE_URL")
-BEARER_TOKEN = os.getenv("BEARER_TOKEN")
-CLIENT_ID = os.getenv("CLIENT_ID")
-CONTENT_TYPE = os.getenv("CONTENT_TYPE")
+API_BASE_URL = os.getenv("pVERIFY_API_BASE_URL")
+BEARER_TOKEN = os.getenv("pVERIFY_BEARER_TOKEN")
+CLIENT_ID = os.getenv("pVERIFY_CLIENT_ID")
+CONTENT_TYPE = os.getenv("pVERIFY_CONTENT_TYPE")
 
 HEADERS = {
     "Authorization": f"Bearer {BEARER_TOKEN}",
@@ -95,7 +95,7 @@ def process_patient_data(row):
     """
 
     payload = {
-        "payerCode": str(row['Payer ID']),
+        "payerCode": str(row['Payer ID pVerify']),
         "payerName": str(row['Payer Name']),
         "provider": {
             "lastName": str(row['Provider']),
@@ -110,10 +110,8 @@ def process_patient_data(row):
         "isSubscriberPatient": (
             True if str(row['isSubPat']).upper() == "TRUE" else False
         ),
-        # "doS_StartDate": f"{datetime.now().strftime('%m/%d/%Y')}",
-        # "doS_EndDate": f"{datetime.now().strftime('%m/%d/%Y')}",        
-        "doS_StartDate": "03/02/2025",
-        "doS_EndDate": "03/02/2025",
+        "doS_StartDate": f"{datetime.now().strftime('%m/%d/%Y')}",
+        "doS_EndDate": f"{datetime.now().strftime('%m/%d/%Y')}",
         "PracticeTypeCode": "86" if row['Type'] == "Dental" else "3",
         "Location": "TA",
         "IncludeHtmlResponse": True
@@ -128,16 +126,11 @@ def process_patient_data(row):
         }
     return payload
 
-# def extract_payment_responsibility_info(response):
-#     """
-#     Extract payment responsibility information from the API response.
-#     """
-
 
 def main():
     df = pd.read_excel(
         os.path.join('data', 'input', 'test_patients.xlsx'),
-        dtype={"Payer ID": str}
+        dtype={"Payer ID pVerify": str}
     )
 
     my_results = []
@@ -159,25 +152,27 @@ def main():
         else:
             my_results.append("Success")
         export_response(
-            response, 
-            index, 
+            response,
+            index,
             str(row['Type']),
             str(row['Payer Name']),
             str(row['Subscriber ID'])
         )
-        if str(row['Payer ID']).upper() == "00007":
+        if str(row['Payer ID pVerify']).upper() == "00007":
             payment_responsibility_info = (
-                    medicare.medicare_payment_responsibility(response))
+                    medicare.pVerify_medicare_payment_responsibility(response))
             print("\nPayment Responsibility Info:")
             print(json.dumps(payment_responsibility_info, indent=4))
-        elif str(row['Payer ID']).upper() == "000931":
+        elif str(row['Payer ID pVerify']).upper() == "000931":
             payment_responsibility_info = (
-                    anthem_bcbs.anthem_bcbs_payment_responsibility(response))
+                    anthem_bcbs.pVerify_anthem_bcbs_payment_responsibility(
+                        response))
             print("\nPayment Responsibility Info:")
             print(json.dumps(payment_responsibility_info, indent=4))
         else:
             payment_responsibility_info = (
-                    general_payer.general_payer_payment_responsibility(response))
+                    general_payer.pVerify_general_payer_payment_responsibility(
+                        response))
             print("\nPayment Responsibility Info:")
             print(json.dumps(payment_responsibility_info, indent=4))
             print("Not Medicare")
@@ -194,7 +189,8 @@ def main():
 
     print(f"Results: {my_results}")
     # Export the ivr_results to a JSON file
-    with open(f'data/output/pVerify_ivr_results_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json', 'w') as f:
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    with open(f'data/output/pVerify_ivr_results_{timestamp}.json', 'w') as f:
         json.dump(ivr_results, f, indent=4)
 
 

@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-client_id = os.getenv("CLIENT_ID")
-client_secret = os.getenv("CLIENT_SECRET")
+client_id = os.getenv("pVERIFY_CLIENT_ID")
+client_secret = os.getenv("pVERIFY_CLIENT_SECRET")
 
 
 def generate_token():

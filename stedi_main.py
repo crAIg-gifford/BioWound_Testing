@@ -38,7 +38,6 @@ def make_request(method, payload):
             return response.json()
         else:
             return {"error": response.json()}
-        
     except RequestException as error:
         return {"error": str(error)}
 
@@ -75,7 +74,6 @@ def export_response(
         f"{row_index}_{timestamp}.json"
     )
     os.makedirs(os.path.dirname(filename), exist_ok=True)
-    
     with open(filename, 'w') as f:
         json.dump(response, f, indent=4)
     print(f"Response exported to: {filename}")
@@ -87,8 +85,6 @@ def process_patient_data(row):
     """
 
     payload = {
-        # "payerCode": str(row['Payer ID']),
-        # "payerName": str(row['Payer Name']),
         "controlNumber": "123321",
         "tradingPartnerServiceId": str(row['Payer ID Stedi']),
         "provider": {
@@ -106,20 +102,7 @@ def process_patient_data(row):
             "dateOfService": "20250402"
         }
     }
-
-    # Add dependent info if the patient is different from subscriber
-    if not pd.isna(row.get('Patient First')):
-        payload["dependent"] = {
-            "firstName": str(row['Patient First']),
-            "lastName": str(row['Patient Last']),
-            "dob": format_date(row['Patient DOB'])
-        }
     return payload
-
-# def extract_payment_responsibility_info(response):
-#     """
-#     Extract payment responsibility information from the API response.
-#     """
 
 
 def main():
@@ -142,29 +125,13 @@ def main():
         # API call
         response = post_data(payload)
         print(response)
-        # if response.get("error"):
-        #     my_results.append("Error")
-        #     continue
-        # else:
-        #     my_results.append("Success")
         export_response(
-            response, 
-            index, 
+            response,
+            index,
             str(row['Type']),
             str(row['Payer Name']),
             str(row['Subscriber ID'])
         )
-        # if str(row['Payer ID']).upper() == "00007":
-        #     payment_responsibility_info = (
-        #             medicare.medicare_payment_responsibility(response))
-        #     print("\nPayment Responsibility Info:")
-        #     print(json.dumps(payment_responsibility_info, indent=4))
-        # elif str(row['Payer ID']).upper() == "000931":
-        #     payment_responsibility_info = (
-        #             anthem_bcbs.anthem_bcbs_payment_responsibility(response))
-        #     print("\nPayment Responsibility Info:")
-        #     print(json.dumps(payment_responsibility_info, indent=4))
-        # else:
         payment_responsibility_info = (
                 general_payer.stedi_general_payer_payment_responsibility(
                     response))
@@ -184,7 +151,8 @@ def main():
 
     print(f"Results: {my_results}")
     # Export the ivr_results to a JSON file
-    with open(f'data/output/stedi_ivr_results_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json', 'w') as f:
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    with open(f'data/output/stedi_ivr_results_{timestamp}.json', 'w') as f:
         json.dump(ivr_results, f, indent=4)
 
 

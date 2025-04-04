@@ -1,4 +1,4 @@
-def medicare_payment_responsibility(response):
+def pVerify_medicare_payment_responsibility(response):
     print("Medicare 222")
     if response['APIResponseCode'] == "1":
         return "Error"

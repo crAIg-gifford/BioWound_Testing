@@ -1,5 +1,5 @@
-def anthem_bcbs_payment_responsibility(response):
-    print("anthem_bcbs 222")
+def pVerify_anthem_bcbs_payment_responsibility(response):
+    print("pVerify_anthem_bcbs 222")
 
     if response['APIResponseCode'] == "1":
         return "Error"
