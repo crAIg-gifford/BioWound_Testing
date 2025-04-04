@@ -194,7 +194,7 @@ def main():
 
     print(f"Results: {my_results}")
     # Export the ivr_results to a JSON file
-    with open(f'data/output/ivr_results_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json', 'w') as f:
+    with open(f'data/output/pVerify_ivr_results_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json', 'w') as f:
         json.dump(ivr_results, f, indent=4)
 
 
