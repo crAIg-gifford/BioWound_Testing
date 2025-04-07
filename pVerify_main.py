@@ -99,7 +99,7 @@ def process_patient_data(row):
         "payerName": str(row['Payer Name']),
         "provider": {
             "lastName": str(row['Provider']),
-            "npi": str(row['NPI'])
+            "npi": str(int(row['NPI']))
         },
         "subscriber": {
             "firstName": str(row['Subscriber First']),
@@ -107,23 +107,14 @@ def process_patient_data(row):
             "dob": format_date(row['Subscriber DOB']),
             "memberID": str(row['Subscriber ID'])
         },
-        "isSubscriberPatient": (
-            True if str(row['isSubPat']).upper() == "TRUE" else False
-        ),
+        "isSubscriberPatient": "True",
         "doS_StartDate": f"{datetime.now().strftime('%m/%d/%Y')}",
         "doS_EndDate": f"{datetime.now().strftime('%m/%d/%Y')}",
-        "PracticeTypeCode": "86" if row['Type'] == "Dental" else "3",
         "Location": "TA",
         "IncludeHtmlResponse": True
     }
-
-    # Add dependent info if the patient is different from subscriber
-    if not pd.isna(row.get('Patient First')):
-        payload["dependent"] = {
-            "firstName": str(row['Patient First']),
-            "lastName": str(row['Patient Last']),
-            "dob": format_date(row['Patient DOB'])
-        }
+    if row['Type'] == "Dental":
+        payload["PracticeTypeCode"] = "86"
     return payload
 
 
@@ -172,7 +163,7 @@ def main():
         else:
             payment_responsibility_info = (
                     general_payer.pVerify_general_payer_payment_responsibility(
-                        response))
+                        str(row['Type']), response))
             print("\nPayment Responsibility Info:")
             print(json.dumps(payment_responsibility_info, indent=4))
             print("Not Medicare")

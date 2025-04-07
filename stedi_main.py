@@ -89,7 +89,7 @@ def process_patient_data(row):
         "tradingPartnerServiceId": str(row['Payer ID Stedi']),
         "provider": {
             "organizationName": str(row['Provider']),
-            "npi": str(row['NPI'])
+            "npi": str(int(row['NPI']))
         },
         "subscriber": {
             "firstName": str(row['Subscriber First']),
@@ -98,10 +98,14 @@ def process_patient_data(row):
             "memberId": str(row['Subscriber ID'])
         },
         "encounter": {
-            "serviceTypeCodes": ["12"],
-            "dateOfService": "20250402"
+            # "serviceTypeCodes": [clean_number(row['Stedi Service Code'])],
+            "dateOfService": format_date(datetime.now())
         }
     }
+    if row['Type'] == "Dental":
+        payload["encounter"]["serviceTypeCodes"] = ["38"]
+    else:
+        payload["encounter"]["serviceTypeCodes"] = ["12"]
     return payload
 
 
@@ -110,6 +114,9 @@ def main():
         os.path.join('data', 'input', 'test_patients.xlsx'),
         dtype={"Payer ID": str}
     )
+    df['Payer ID Stedi'] = df['Payer ID Stedi'].apply(
+        lambda x: str(int(x)) if isinstance(x, float) and x.is_integer() 
+        else str(x))
 
     my_results = []
     ivr_results = {}
