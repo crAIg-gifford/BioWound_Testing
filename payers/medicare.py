@@ -9,7 +9,11 @@ def pVerify_medicare_payment_responsibility(response):
     # Payer Name
     responsibility_details["PayerName"] = (
             response['PayerName'])
-    
+
+    # Plan Type
+    responsibility_details["PlanType"] = (
+            response['PlanCoverageSummary']['PolicyType'])
+
     # QMB Designation
     responsibility_details["QMB_Designation"] = medicare_info['QMBPolicyType']
 
@@ -24,7 +28,7 @@ def pVerify_medicare_payment_responsibility(response):
     # Coinsurance
     responsibility_details["Coinsurance"] = (
             medicare_info['MedicareCoInsurance']['Value'])
-    
+
     # OOP Max
     responsibility_details["OOP_Max"] = (
             hbpc_info['IndividualOOP_InNet'])

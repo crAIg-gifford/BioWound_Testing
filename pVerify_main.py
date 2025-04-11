@@ -27,8 +27,8 @@ def make_request(method, eligibility_type, payload):
     Generic function to handle GET and POST requests.
     """
     if eligibility_type == "Dental":
-        # endpoint = "DentalEligibilitySummary"
-        endpoint = "DentalEligibilityBenefitSummary"
+        endpoint = "DentalEligibilitySummary"
+        # endpoint = "DentalEligibilityBenefitSummary" ## they are 
     elif eligibility_type == "Medical":
         endpoint = "EligibilitySummary"
     url = f"{API_BASE_URL}{endpoint}"
@@ -64,7 +64,8 @@ def format_date(value):
 
 
 def export_response(
-    response, row_index, eligibility_type, payer_name, subscriber_id
+    response, row_index, patient_name, eligibility_type,
+    payer_name, subscriber_id
 ):
     """
     Export API response to a JSON file in the data/output directory.
@@ -78,7 +79,7 @@ def export_response(
     ).strip()
     filename = os.path.join(
         'data', 'output',
-        f"pVerify_eligibility_response_{eligibility_type}_"
+        f"pVerify_eligibility_response_{patient_name}_{eligibility_type}_"
         f"{safe_payer_name}_{subscriber_id}_"
         f"{row_index}_{timestamp}.json"
     )
@@ -108,13 +109,17 @@ def process_patient_data(row):
             "memberID": str(row['Subscriber ID'])
         },
         "isSubscriberPatient": "True",
-        "doS_StartDate": f"{datetime.now().strftime('%m/%d/%Y')}",
-        "doS_EndDate": f"{datetime.now().strftime('%m/%d/%Y')}",
+        # "doS_StartDate": f"{datetime.now().strftime('%m/%d/%Y')}",
+        # "doS_EndDate": f"{datetime.now().strftime('%m/%d/%Y')}",
+        "doS_StartDate": "03/01/2025",
+        "doS_EndDate": "03/01/2025",
         "Location": "TA",
         "IncludeHtmlResponse": True
     }
     if row['Type'] == "Dental":
         payload["PracticeTypeCode"] = "86"
+    else:
+        payload["PracticeTypeCode"] = "17"
     return payload
 
 
@@ -132,6 +137,7 @@ def main():
             f"Processing row {index}: {row['Type']}, {row['Payer Name']}, "
             f"{row['Subscriber ID']}"
         )
+        patient_name = f"{row['Subscriber First']} {row['Subscriber Last']}"
         payload = process_patient_data(row)
         print("\nProcessed Patient Data:")
         print(json.dumps(payload, indent=4))
@@ -145,6 +151,7 @@ def main():
         export_response(
             response,
             index,
+            patient_name,
             str(row['Type']),
             str(row['Payer Name']),
             str(row['Subscriber ID'])

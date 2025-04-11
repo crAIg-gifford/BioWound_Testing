@@ -4,12 +4,22 @@ def pVerify_general_payer_payment_responsibility(type, response):
         return "Dental Parsing needed"
     if response['APIResponseCode'] == "1":
         return "Error"
+    if response['PlanCoverageSummary']['Status'] == "Inactive":
+        responsibility_details = {
+            "PayerName": response['PayerName'],
+            "Status": "Plan is inactive"
+        }
+        return responsibility_details
     responsibility_details = {}
     DMESummary = response['DMESummary']
 
     # Payer Name
     responsibility_details["PayerName"] = (
             response['PayerName'])
+    
+    # Plan Type
+    responsibility_details["PlanType"] = (
+            response['PlanCoverageSummary']['PolicyType'])
 
     # In Network Coverage
     responsibility_details["isInNetworkCoverage"] = (
