@@ -1,5 +1,5 @@
 ## Overview
-This tool automates the process of verifying insurance eligibility for patients by interfacing with pVerify's API. It processes patient data from Excel files and generates detailed eligibility responses.
+This tool automates the process of verifying insurance eligibility for patients by interfacing with pVerify's API and Stedi's API. It consumes patient data from Excel files to create the payloads for the APIs, generates the associated eligibility responses, and attempts to create a consolidated IVR json response.
 
 ## Features
 - Processes patient data from Excel spreadsheets

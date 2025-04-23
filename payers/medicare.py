@@ -1,6 +1,5 @@
 def pVerify_medicare_payment_responsibility(response):
-    print("Medicare 222")
-    if response['APIResponseCode'] == "1":
+    if response['APIResponseCode'] != "0":
         return "Error"
     responsibility_details = {}
     medicare_info = response['MedicareInfoSummary']
@@ -8,11 +7,11 @@ def pVerify_medicare_payment_responsibility(response):
 
     # Payer Name
     responsibility_details["PayerName"] = (
-            response['PayerName'])
+        response['PayerName'])
 
     # Plan Type
     responsibility_details["PlanType"] = (
-            response['PlanCoverageSummary']['PolicyType'])
+        response['PlanCoverageSummary']['PolicyType'])
 
     # QMB Designation
     responsibility_details["QMB_Designation"] = medicare_info['QMBPolicyType']
@@ -38,3 +37,7 @@ def pVerify_medicare_payment_responsibility(response):
             hbpc_info['IndividualOOPRemainingInNet'])
 
     return responsibility_details
+
+
+def stedi_medicare_payment_responsibility(response):
+    return "currently not implemented"

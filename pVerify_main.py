@@ -5,7 +5,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from datetime import datetime
 from requests.exceptions import RequestException
-from payers import medicare, anthem_bcbs, general_payer
+from payers import medicare, general_payer
 
 # Load environment variables
 load_dotenv()
@@ -22,15 +22,11 @@ HEADERS = {
 }
 
 
-def make_request(method, eligibility_type, payload):
+def make_request(method, payload):
     """
     Generic function to handle GET and POST requests.
     """
-    if eligibility_type == "Dental":
-        endpoint = "DentalEligibilitySummary"
-        # endpoint = "DentalEligibilityBenefitSummary" ## they are 
-    elif eligibility_type == "Medical":
-        endpoint = "EligibilitySummary"
+    endpoint = "EligibilitySummary"
     url = f"{API_BASE_URL}{endpoint}"
     print(f"URL: {url}")
     try:
@@ -55,8 +51,8 @@ def get_data(endpoint):
     return make_request("GET", endpoint)
 
 
-def post_data(eligibility_type, payload):
-    return make_request("POST", eligibility_type, payload)
+def post_data(payload):
+    return make_request("POST", payload)
 
 
 def format_date(value):
@@ -64,7 +60,7 @@ def format_date(value):
 
 
 def export_response(
-    response, row_index, patient_name, eligibility_type,
+    response, row_index, patient_name,
     payer_name, subscriber_id
 ):
     """
@@ -79,7 +75,7 @@ def export_response(
     ).strip()
     filename = os.path.join(
         'data', 'output',
-        f"pVerify_eligibility_response_{patient_name}_{eligibility_type}_"
+        f"pVerify_eligibility_response_{patient_name}_"
         f"{safe_payer_name}_{subscriber_id}_"
         f"{row_index}_{timestamp}.json"
     )
@@ -109,17 +105,12 @@ def process_patient_data(row):
             "memberID": str(row['Subscriber ID'])
         },
         "isSubscriberPatient": "True",
-        # "doS_StartDate": f"{datetime.now().strftime('%m/%d/%Y')}",
-        # "doS_EndDate": f"{datetime.now().strftime('%m/%d/%Y')}",
-        "doS_StartDate": "03/01/2025",
-        "doS_EndDate": "03/01/2025",
+        "doS_StartDate": f"{datetime.now().strftime('%m/%d/%Y')}",
+        "doS_EndDate": f"{datetime.now().strftime('%m/%d/%Y')}",
+        "PracticeTypeCode": "22",   # 3 = DME; 22 = Surgical-Office
         "Location": "TA",
         "IncludeHtmlResponse": True
     }
-    if row['Type'] == "Dental":
-        payload["PracticeTypeCode"] = "86"
-    else:
-        payload["PracticeTypeCode"] = "17"
     return payload
 
 
@@ -134,7 +125,7 @@ def main():
     # Process and submit data
     for index, row in df.iterrows():
         print(
-            f"Processing row {index}: {row['Type']}, {row['Payer Name']}, "
+            f"Processing row {index}: {row['Payer Name']}, "
             f"{row['Subscriber ID']}"
         )
         patient_name = f"{row['Subscriber First']} {row['Subscriber Last']}"
@@ -142,7 +133,7 @@ def main():
         print("\nProcessed Patient Data:")
         print(json.dumps(payload, indent=4))
         # API call
-        response = post_data(row['Type'], payload)
+        response = post_data(payload)
         if response.get("error"):
             my_results.append("Error")
             continue
@@ -152,7 +143,6 @@ def main():
             response,
             index,
             patient_name,
-            str(row['Type']),
             str(row['Payer Name']),
             str(row['Subscriber ID'])
         )
@@ -161,16 +151,10 @@ def main():
                     medicare.pVerify_medicare_payment_responsibility(response))
             print("\nPayment Responsibility Info:")
             print(json.dumps(payment_responsibility_info, indent=4))
-        elif str(row['Payer ID pVerify']).upper() == "000931":
-            payment_responsibility_info = (
-                    anthem_bcbs.pVerify_anthem_bcbs_payment_responsibility(
-                        response))
-            print("\nPayment Responsibility Info:")
-            print(json.dumps(payment_responsibility_info, indent=4))
         else:
             payment_responsibility_info = (
                     general_payer.pVerify_general_payer_payment_responsibility(
-                        str(row['Type']), response))
+                        response))
             print("\nPayment Responsibility Info:")
             print(json.dumps(payment_responsibility_info, indent=4))
             print("Not Medicare")
