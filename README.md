@@ -13,7 +13,7 @@ This tool automates the process of verifying insurance eligibility for patients 
 - [pVerify Cost Calculator](https://docs.google.com/spreadsheets/d/1YNJ-GKqILvrFeaFD969Txb1CK0GqmyCgpg2xWQFXIK0/edit?gid=0#gid=0)
 - [Stedi API Documentation](https://www.stedi.com/docs/api-reference/healthcare/post-healthcare-eligibility)
 - [Stedi Payer List](https://www.stedi.com/healthcare/network)
-- 
+
 ## Steps
 1. Create a .env file in the root directory and cp the data found in [Bitwarden -> Portal Aggregator -> pVerify -> notes]
 2. Reference the test_patients.xlsx template from the templates dir
